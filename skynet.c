@@ -53,6 +53,11 @@ typedef struct s_ladder {
 struct s_ladder database[d_devices];
 struct s_ladder_garbage garbage[d_devices];
 int last_entry, last_discarded;
+const char *ignore_list[] = {
+	"H000T",
+	"H000B",
+	NULL
+};
 #define dD(i) database[i]
 #define dE(i) history[i]
 #define dS(i) serials[i]
@@ -227,6 +232,16 @@ int f_analyze_file(const char *file) {
 	return result;
 }
 
+int f_check_directory(const char *directory) {
+	int index, result = d_true;
+	for (index = 0; ignore_list[index]; index++)
+		if (strcmp(ignore_list[index], directory) == 0) {
+			result = d_false;
+			break;
+		}
+	return result;
+}
+
 int f_analyze_directory(const char *directory) {
 	DIR *stream;
 	struct dirent *descriptor;
@@ -234,10 +249,11 @@ int f_analyze_directory(const char *directory) {
 	char next_directory[d_string_buffer_size];
 	if ((stream = opendir(directory))) {
 		while ((descriptor = readdir(stream)))
-			if (descriptor->d_name[0] != '.') {
-				snprintf(next_directory, d_string_buffer_size, "%s/%s", directory, descriptor->d_name);
-				f_analyze_directory(next_directory);
-			}
+			if (descriptor->d_name[0] != '.')
+				if (f_check_directory(descriptor->d_name)) {
+					snprintf(next_directory, d_string_buffer_size, "%s/%s", directory, descriptor->d_name);
+					f_analyze_directory(next_directory);
+				}
 		closedir(stream);
 		result = d_true;
 	} else
