@@ -29,10 +29,10 @@
 #define d_devices 512
 #define d_device_entries 2048
 #define d_device_sensors 2
+#define d_device_channels 384
+#define d_device_column 8
 #define d_true 1
 #define d_false 0
-#define d_trb_event_channels 384
-#define d_trb_event_column 8
 typedef struct s_key_target {
 	const char *key;
 	void *destination;
@@ -173,9 +173,9 @@ char *f_string_trim(char *string) {
 
 int p_analyze_row(char *string, float *pedestal, float *sigma_raw, float *sigma) {
 	char *begin_pointer = string, *end_pointer;
-	float content[d_trb_event_column];
+	float content[d_device_column];
 	int index = 0;
-	while ((index < d_trb_event_column) && (end_pointer = strchr(begin_pointer, ','))) {
+	while ((index < d_device_column) && (end_pointer = strchr(begin_pointer, ','))) {
 		*end_pointer = '\0';
 		content[index++] = atof(begin_pointer);
 		begin_pointer = (end_pointer+1);
@@ -233,7 +233,7 @@ int f_analyze_file(const char *file) {
 	};
 	char line_buffer[d_string_buffer_size], *key_pointer, *value_pointer, serials[d_device_sensors][d_string_serial_size];
 	int result = d_false, serial_index = 0, key_index, garbage_index, strip_index = 0, readed_strip_index;
-	float pedestal[d_trb_event_channels] = {0.0}, sigma_raw[d_trb_event_channels] = {0.0}, sigma[d_trb_event_channels] = {0.0};
+	float pedestal[d_device_channels] = {0.0}, sigma_raw[d_device_channels] = {0.0}, sigma[d_device_channels] = {0.0};
 	if (f_check_extension(file, "cal"))
 		if ((stream = fopen(file, "r"))) {
 			strcpy(entry.cal_file, file);
@@ -255,7 +255,7 @@ int f_analyze_file(const char *file) {
 									d_check_key(key_pointer, value_pointer, dictionary[key_index], break);
 							}
 						}
-					} else if (strip_index < d_trb_event_channels) {
+					} else if (strip_index < d_device_channels) {
 						readed_strip_index = p_analyze_row(line_buffer, &(pedestal[strip_index]), &(sigma_raw[strip_index]),
 								&(sigma[strip_index]));
 						if (strip_index != readed_strip_index) {
@@ -267,9 +267,9 @@ int f_analyze_file(const char *file) {
 				}
 			fclose(stream);
 			if (serial_index == d_device_sensors) {
-				p_analyze_row_values(pedestal, d_trb_event_channels, &(entry.pedestal), &(entry.pedestal_rms));
-				p_analyze_row_values(sigma_raw, d_trb_event_channels, &(entry.sigma_raw), &(entry.sigma_raw_rms));
-				p_analyze_row_values(sigma, d_trb_event_channels, &(entry.sigma), &(entry.sigma_rms));
+				p_analyze_row_values(pedestal, d_device_channels, &(entry.pedestal), &(entry.pedestal_rms));
+				p_analyze_row_values(sigma_raw, d_device_channels, &(entry.sigma_raw), &(entry.sigma_raw_rms));
+				p_analyze_row_values(sigma, d_device_channels, &(entry.sigma), &(entry.sigma_rms));
 				f_analyze_event(serials, entry);
 				result = d_true;
 			} else {
