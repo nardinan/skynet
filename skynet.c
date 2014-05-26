@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <sys/dir.h>
 #include <time.h>
+#include <math.h>
 #define d_string_buffer_size 512
 #define d_string_serial_size 20
 #define d_string_date_size 45
@@ -30,6 +31,8 @@
 #define d_device_sensors 2
 #define d_true 1
 #define d_false 0
+#define d_trb_event_channels 384
+#define d_trb_event_column 8
 typedef struct s_key_target {
 	const char *key;
 	void *destination;
@@ -42,7 +45,7 @@ typedef struct s_ladder_garbage {
 typedef struct s_ladder_test {
 	char cal_file[d_string_buffer_size], pdf_file[d_string_buffer_size], name[d_string_buffer_size], date[d_string_date_size],
 	     location[d_string_location_size];
-	float bias_voltage, leakage_current, temperature_left, temperature_right;
+	float bias_voltage, leakage_current, temperature_left, temperature_right, pedestal, pedestal_rms, sigma_raw, sigma_raw_rms, sigma, sigma_rms;
 	time_t date_timestamp;
 } s_ladder_test;
 typedef struct s_ladder {
@@ -98,8 +101,10 @@ void f_analyze_database(void) {
 		if (last_event >= 0)
 			strcpy(database[index].last_name, database[index].history[last_event].name);
 		/* just to check our working directory */
-		printf("%s -> last calibration dates from %s in %s (%s)\n", dD(index).last_name, dD(index).dE(last_event).date,
-			dD(index).dE(last_event).location, dD(index).dE(last_event).cal_file);
+		printf("%s -> last calibration %s @ %s (%s) <ped> %.02f(+/- %.02f); <sig_raw> %.02f(+/- %.02f); <sig> %.02f(+/- %.02f)\n", 
+				dD(index).last_name, dD(index).dE(last_event).date, dD(index).dE(last_event).location, dD(index).dE(last_event).cal_file,
+				dD(index).dE(last_event).pedestal, dD(index).dE(last_event).pedestal_rms, dD(index).dE(last_event).sigma_raw,
+				dD(index).dE(last_event).sigma_raw_rms, dD(index).dE(last_event).sigma, dD(index).dE(last_event).sigma_rms);
 	}
 }
 
@@ -165,6 +170,43 @@ char *f_string_trim(char *string) {
 		memmove(string, begin, strlen(begin)+1);
 	return string;
 }
+
+int p_analyze_row(char *string, float *pedestal, float *sigma_raw, float *sigma) {
+	char *begin_pointer = string, *end_pointer;
+	float content[d_trb_event_column];
+	int index = 0;
+	while ((index < d_trb_event_column) && (end_pointer = strchr(begin_pointer, ','))) {
+		*end_pointer = '\0';
+		content[index++] = atof(begin_pointer);
+		begin_pointer = (end_pointer+1);
+	}
+	*pedestal = content[3];
+	*sigma_raw = content[4];
+	*sigma = content[5];
+	return (int)content[0];
+}
+
+float f_babylonian_sqrt(float value, float precision) {
+	float result = value, level = 1.0;
+	while ((result-level) > precision) {
+		result = (result+level)/2.0;
+		level = value/result;
+	}
+	return result;
+}
+
+void p_analyze_row_values(float *values, size_t dimension, float *mean, float *rms) {
+	float local_mean = 0, local_square = 0, fraction = 1/(float)dimension;
+	int index;
+	for (index = 0; index < dimension; index++) {
+		local_mean += values[index];
+		local_square += (values[index]*values[index]);
+	}
+	local_mean *= fraction;
+	local_square *= fraction;
+	*mean = local_mean;
+	*rms = f_babylonian_sqrt(fabs(local_square-(local_mean*local_mean)), 0.01f);
+}
 #define d_check_key(_k,_v,_n,act)\
 	do{\
 		if(strcmp((_k),(_n).key)==0){\
@@ -190,7 +232,8 @@ int f_analyze_file(const char *file) {
 		{NULL, 			NULL, 					'S'}
 	};
 	char line_buffer[d_string_buffer_size], *key_pointer, *value_pointer, serials[d_device_sensors][d_string_serial_size];
-	int result = d_false, serial_index = 0, key_index, garbage_index;
+	int result = d_false, serial_index = 0, key_index, garbage_index, strip_index = 0, readed_strip_index;
+	float pedestal[d_trb_event_channels] = {0.0}, sigma_raw[d_trb_event_channels] = {0.0}, sigma[d_trb_event_channels] = {0.0};
 	if (f_check_extension(file, "cal"))
 		if ((stream = fopen(file, "r"))) {
 			strcpy(entry.cal_file, file);
@@ -212,10 +255,21 @@ int f_analyze_file(const char *file) {
 									d_check_key(key_pointer, value_pointer, dictionary[key_index], break);
 							}
 						}
+					} else if (strip_index < d_trb_event_channels) {
+						readed_strip_index = p_analyze_row(line_buffer, &(pedestal[strip_index]), &(sigma_raw[strip_index]),
+								&(sigma[strip_index]));
+						if (strip_index != readed_strip_index) {
+							fprintf(stderr, "wrong channel index (%d != %d), aligning ...\n", strip_index, readed_strip_index);
+							strip_index = readed_strip_index;
+						}
+						strip_index++;
 					}
 				}
 			fclose(stream);
 			if (serial_index == d_device_sensors) {
+				p_analyze_row_values(pedestal, d_trb_event_channels, &(entry.pedestal), &(entry.pedestal_rms));
+				p_analyze_row_values(sigma_raw, d_trb_event_channels, &(entry.sigma_raw), &(entry.sigma_raw_rms));
+				p_analyze_row_values(sigma, d_trb_event_channels, &(entry.sigma), &(entry.sigma_rms));
 				f_analyze_event(serials, entry);
 				result = d_true;
 			} else {
