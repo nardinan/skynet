@@ -15,14 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "analyzer.h"
-#include "cal_module.h"
-struct s_analyzer_action actions[] = {
-	{".cal", &f_cal_module_analyze},
-	{NULL}
-};
-int main (int argc, char *argv[]) {
-	if (argc == 2)
-		f_analyze_directory(argv[1], actions, "H000T H000B");
-	return 0;
-}
+#ifndef skynet_analyzer_h
+#define skynet_analyzer_h
+#include <miranda/ground.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <limits.h>
+#include <sys/types.h>
+#include <sys/dir.h>
+typedef int (* t_analyzer_recall)(const char * /* complete path */);
+typedef struct s_analyzer_action {
+	const char *extension;
+	t_analyzer_recall action;
+} s_analyzer_action;
+extern int f_analyze_compare_extension(const char *file, const char *extension);
+extern int p_analyze_directory_file(const char *file, struct s_analyzer_action *actions);
+extern int f_analyze_directory(const char *directory, struct s_analyzer_action *actions, const char *directory_ignore_list);
+#endif
