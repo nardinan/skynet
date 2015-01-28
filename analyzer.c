@@ -42,7 +42,7 @@ int f_analyze_directory(const char *directory, struct s_analyzer_action *actions
 	DIR *stream;
 	struct dirent *descriptor;
 	char next_directory[PATH_MAX];
-	int result = d_true;
+	int index, load_result, result = d_true;
 	if ((stream = opendir(directory))) {
 		while ((descriptor = readdir(stream)))
 			if ((descriptor->d_name[0] != '.') && (!(strstr(descriptor->d_name, directory_ignore_list)))) {
@@ -53,5 +53,12 @@ int f_analyze_directory(const char *directory, struct s_analyzer_action *actions
 		closedir(stream);
 	} else
 		result = p_analyze_directory_file(directory, actions);
+	for (index = 0; actions[index].extension; ++index) {
+		if (actions[index].load)
+			if (!(load_result = actions[index].load()))
+				d_log(e_log_level_low, "unable to run '.%s' LOAD function which returns code %d", actions[index].extension, load_result);
+		if (actions[index].destroy)
+			actions[index].destroy();
+	}
 	return result;
 }

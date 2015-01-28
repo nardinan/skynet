@@ -18,11 +18,14 @@
 #include "analyzer.h"
 #include "cal_module.h"
 struct s_analyzer_action actions[] = {
-	{".cal", &f_cal_module_analyze},
+	{".cal", &f_cal_module_analyze, &f_cal_module_load, &f_cal_module_destroy},
 	{NULL}
 };
 int main (int argc, char *argv[]) {
-	if (argc == 2)
+	if (argc == 2) {
+		f_memory_init();
 		f_analyze_directory(argv[1], actions, "H000T H000B");
+		f_memory_destroy();
+	}
 	return 0;
 }
