@@ -27,6 +27,7 @@
 #define d_cal_module_date_size 45
 #define d_cal_module_location_size 20
 #define d_cal_module_pdf_extension "pdf"
+#define d_cal_module_date_format "%d %b %Y %H:%M:%S"
 typedef enum e_cal_module_formats {
 	e_cal_module_format_int,
 	e_cal_module_format_float
@@ -51,7 +52,10 @@ typedef struct s_cal_module_data { d_list_node_head;
 	struct s_cal_module_data_row rows[d_cal_module_ladder_channels];
 	time_t timestamp;
 } s_cal_module_data;
+extern struct s_list *v_cal_module_entries;
 extern int p_cal_module_analyze_add(struct s_cal_module_data *entry);
 extern int p_cal_module_analyze_row(char *buffer, struct s_cal_module_value *entries, size_t size);
 extern int f_cal_module_analyze(const char *file);
+extern int f_cal_module_load(void);
+extern void f_cal_module_destroy(void);
 #endif

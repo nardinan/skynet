@@ -16,9 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "cal_module.h"
+struct s_list *v_cal_module_entries = NULL;
 int p_cal_module_analyze_add(struct s_cal_module_data *entry) {
+	struct s_cal_module_data *list_entry;
 	int result = d_false;
-	/* TODO: prepare queries */
+	if (!v_cal_module_entries)
+		f_list_init(&v_cal_module_entries);
+	if ((list_entry = (struct s_cal_module_data *) d_malloc(sizeof(struct s_cal_module_data)))) {
+		memcpy(list_entry, entry, sizeof(struct s_cal_module_data));
+		f_list_append(v_cal_module_entries, (struct s_list_node *)list_entry, e_list_insert_head);
+	} else
+		d_die(d_error_malloc);
 	return result;
 }
 
@@ -52,6 +60,7 @@ int p_cal_module_analyze_row(char *buffer, struct s_cal_module_value *entries, s
 int f_cal_module_analyze(const char *file) {
 	FILE *stream;
 	char buffer[d_string_buffer_size], *next, *pointer;
+	struct tm event_time;
 	struct s_cal_module_data entry = {0};
 	struct s_string_key_format dictionary[] = {
 		{e_string_key_kind_string, 	"name",			{(void *)entry.name},			d_string_buffer_size},
@@ -93,7 +102,7 @@ int f_cal_module_analyze(const char *file) {
 								entry.rows[current_index].sigma = sigma;
 								entry.rows[current_index].bad_channel = bad_channel;
 							} else
-								fprintf(stderr, "warning: [%s] channel %d missing\n", file, current_index);
+								d_log(e_log_level_low, "warning, channel %d missing @ %s", current_index, file);
 							current_index++;
 						}
 			}
@@ -109,9 +118,26 @@ int f_cal_module_analyze(const char *file) {
 					if (*(++pointer) == '_')
 						if (!isdigit(*(++pointer)))
 							entry.test_kind = *(pointer);
+					if (strptime(entry.date, d_cal_module_date_format, &event_time))
+						entry.timestamp = mktime(&event_time);
 					p_cal_module_analyze_add(&entry);
 				}
 		}
 	}
 	return result;
+}
+
+int f_cal_module_load (void) {
+	int result = d_true;
+	return result;
+}
+
+void f_cal_module_destroy (void) {
+	struct s_cal_module_data *current;
+	if (v_cal_module_entries) {
+		if (v_cal_module_entries->head)
+			if ((current = (struct s_cal_module_data *)f_list_delete(v_cal_module_entries, v_cal_module_entries->head)))
+				d_free(current);
+		f_list_destroy(&v_cal_module_entries);
+	}
 }
