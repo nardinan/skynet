@@ -24,6 +24,7 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/dir.h>
+#define d_analyzer_database "./skynet.blacklist.txt"
 typedef int (* t_analyzer_recall)(const char * /* complete path */);
 typedef int (* t_analyzer_load)(void);
 typedef void (* t_analyzer_destroy)(void);
@@ -33,6 +34,7 @@ typedef struct s_analyzer_action {
 	t_analyzer_load load;
 	t_analyzer_destroy destroy;
 } s_analyzer_action;
+extern int f_analyze_exclude(const char *file);
 extern int f_analyze_compare_extension(const char *file, const char *extension);
 extern int p_analyze_directory_file(const char *file, struct s_analyzer_action *actions);
 extern int f_analyze_directory(const char *directory, struct s_analyzer_action *actions, const char *directory_ignore_list);

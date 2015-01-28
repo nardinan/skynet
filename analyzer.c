@@ -16,6 +16,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "analyzer.h"
+int f_analyze_exclude(const char *file) {
+	char buffer[PATH_MAX];
+	FILE *stream;
+	int result = d_true;
+	if ((stream = fopen(d_analyzer_database, "r"))) {
+		while (!feof(stream))
+			if ((fgets(buffer, PATH_MAX, stream))) {
+				f_string_trim(buffer);
+				if (f_string_strcmp(buffer, file) == 0) {
+					result = d_false;
+					break;
+				}
+			}
+		fclose(stream);
+	}
+	if (result)
+		if ((stream = fopen(d_analyzer_database, "a"))) {
+			fprintf(stream, "%s\n", file);
+			fclose(stream);
+		}
+	return result;
+}
+
 int f_analyze_compare_extension(const char *file, const char *extension) {
 	int result = d_false;
 	char *pointer;
@@ -28,13 +51,13 @@ int f_analyze_compare_extension(const char *file, const char *extension) {
 int p_analyze_directory_file(const char *file, struct s_analyzer_action *actions) {
 	int index, result = d_true;
 	if (actions)
-		for (index = 0; actions[index].extension; ++index)
-			if (f_analyze_compare_extension(file, actions[index].extension)) {
-				/* TODO: check the file in my <file DB> and verify if the last_change DB is the same */
-				/* TODO: mark the file (in my database) as already readed */
-				result = actions[index].action(file);
-				break;
-			}
+		if (f_analyze_exclude(file)) {
+			for (index = 0; actions[index].extension; ++index)
+				if (f_analyze_compare_extension(file, actions[index].extension)) {
+					result = actions[index].action(file);
+					break;
+				}
+		}
 	return result;
 }
 
