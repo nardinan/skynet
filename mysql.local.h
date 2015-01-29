@@ -19,6 +19,7 @@
 #define skynet_mysql_local_h
 #include <miranda/ground.h>
 #include <mysql.h>
+#define d_mysql_local_query_size 5120
 typedef int (* t_mysql_local_recall)(MYSQL_ROW entries, size_t elements);
 typedef struct s_mysql_local_parameters {
 	char *server, *username, *password, *database;
