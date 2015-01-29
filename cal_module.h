@@ -19,6 +19,7 @@
 #define skynet_cal_module_h
 #include <miranda/ground.h>
 #include <limits.h>
+#include "mysql.local.h"
 #define d_cal_module_ladder_channels 384
 #define d_cal_module_ladder_serials 2
 #define d_cal_module_ladder_columns 8
@@ -26,6 +27,10 @@
 #define d_cal_module_serial_size 20
 #define d_cal_module_date_size 45
 #define d_cal_module_location_size 20
+#define d_cal_module_device_type_size 3
+#define d_cal_module_device_code_size 4
+#define d_cal_module_device_default_location 'H'
+#define d_cal_module_device_default_type "QM"
 #define d_cal_module_pdf_extension "pdf"
 #define d_cal_module_date_format "%d %b %Y %H:%M:%S"
 typedef enum e_cal_module_formats {
@@ -56,6 +61,7 @@ extern struct s_list *v_cal_module_entries;
 extern int p_cal_module_analyze_add(struct s_cal_module_data *entry);
 extern int p_cal_module_analyze_row(char *buffer, struct s_cal_module_value *entries, size_t size);
 extern int f_cal_module_analyze(const char *file);
+extern void p_cal_module_load_check_device(char location_code, char device_kind, unsigned int device_code, char *device_type, char connector_side);
 extern int f_cal_module_load(void);
 extern void f_cal_module_destroy(void);
 #endif

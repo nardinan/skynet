@@ -127,12 +127,46 @@ int f_cal_module_analyze(const char *file) {
 	return result;
 }
 
+void p_cal_module_load_check_device (char location_code, char device_kind, unsigned int device_code, char *device_type, char connector_side) {
+	char query[d_mysql_local_query_size];
+	snprintf(query, d_mysql_local_query_size, "INSERT INTO t_device(location_fk, kind, code, type, connector) SELECT * FROM (SELECT "
+			"(SELECT location_pk FROM t_location WHERE code = '%c') AS tmp_location_fk, "
+			"'%c' AS tmp_kind, "
+			"%03d AS tmp_code, "
+			"'%s' AS tmp_type, "
+			"'%c' AS tmp_connector) AS temporary WHERE NOT EXISTS "
+			"(SELECT kind, code, type, connector FROM t_device WHERE (kind = '%c') AND (code = %03d) AND (type = '%s')) LIMIT 1;",
+			location_code, device_kind, device_code, device_type, connector_side, device_kind, device_code, device_type);
+	if (f_mysql_local_run(query, NULL))
+		d_log(e_log_level_high, "running \"%s\"", query);
+}
+
 int f_cal_module_load (void) {
 	struct s_cal_module_data *current;
-	char query[d_string_buffer_size];
-	int result = d_true;
+	char location_code, device_kind, device_type[d_cal_module_device_type_size], device_code[d_cal_module_device_code_size] = {0}, connector_side;
+	int index, result = d_true;
 	if ((v_cal_module_entries) && (current = (struct s_cal_module_data *)(v_cal_module_entries->head)))
 		while (current) {
+			index = 0;
+			device_kind = current->name[index++];
+			if (device_kind == 'H') {
+				location_code = d_cal_module_device_default_location;
+				if (current->name[index] == 'F') {
+					device_type[0] = 'F';
+					device_type[1] = 'M';
+					index++;
+				} else
+					strncpy(device_type, d_cal_module_device_default_type, d_cal_module_device_type_size);
+			} else {
+				location_code = current->name[index++];
+				device_type[0] = current->name[index++];
+				device_type[1] = current->name[index++];
+			}
+			device_code[0] = current->name[index++];
+			device_code[1] = current->name[index++];
+			device_code[2] = current->name[index++];
+			connector_side = current->name[index++];
+			p_cal_module_load_check_device(location_code, device_kind, atoi(device_code), device_type, connector_side);
 			current = (struct s_cal_module_data *)(current->head.next);
 		}
 	return result;
