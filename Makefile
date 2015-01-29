@@ -2,7 +2,7 @@ objects = skynet.o mysql.local.o analyzer.o cal_module.o
 cc = gcc -g
 cflags = -Wall -I.. `mysql_config --cflags` -Wno-variadic-macros -Wno-missing-braces -Wno-gnu -Wno-pointer-sign -c -pedantic
 lflags = -Wall
-liblink = -L../miranda -L/usr/lib64 -L/usr/lib -lpthread -lmiranda_ground `mysql_config --libs`
+liblink = -L../miranda -L/usr/lib -lpthread -lmiranda_ground `mysql_config --libs`
 exec = skynet.bin
 
 all: $(objects)

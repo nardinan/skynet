@@ -128,14 +128,20 @@ int f_cal_module_analyze(const char *file) {
 }
 
 int f_cal_module_load (void) {
+	struct s_cal_module_data *current;
+	char query[d_string_buffer_size];
 	int result = d_true;
+	if ((v_cal_module_entries) && (current = (struct s_cal_module_data *)(v_cal_module_entries->head)))
+		while (current) {
+			current = (struct s_cal_module_data *)(current->head.next);
+		}
 	return result;
 }
 
 void f_cal_module_destroy (void) {
 	struct s_cal_module_data *current;
 	if (v_cal_module_entries) {
-		if (v_cal_module_entries->head)
+		while (v_cal_module_entries->head)
 			if ((current = (struct s_cal_module_data *)f_list_delete(v_cal_module_entries, v_cal_module_entries->head)))
 				d_free(current);
 		f_list_destroy(&v_cal_module_entries);

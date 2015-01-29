@@ -20,6 +20,7 @@ int f_analyze_exclude(const char *file) {
 	char buffer[PATH_MAX];
 	FILE *stream;
 	int result = d_true;
+	return result; /* FIXME: after the test you have to remove this line */
 	if ((stream = fopen(d_analyzer_database, "r"))) {
 		while (!feof(stream))
 			if ((fgets(buffer, PATH_MAX, stream))) {
@@ -61,27 +62,45 @@ int p_analyze_directory_file(const char *file, struct s_analyzer_action *actions
 	return result;
 }
 
-int f_analyze_directory(const char *directory, struct s_analyzer_action *actions, const char *directory_ignore_list) {
+int p_analyze_directory(const char *directory, struct s_analyzer_action *actions, const char *directory_ignore_list) {
 	DIR *stream;
 	struct dirent *descriptor;
 	char next_directory[PATH_MAX];
-	int index, load_result, result = d_true;
+	int result = d_true;
 	if ((stream = opendir(directory))) {
 		while ((descriptor = readdir(stream)))
 			if ((descriptor->d_name[0] != '.') && (!(strstr(descriptor->d_name, directory_ignore_list)))) {
 				snprintf(next_directory, PATH_MAX, "%s/%s", directory, descriptor->d_name);
-				if (!(result = f_analyze_directory(next_directory, actions, directory_ignore_list)))
+				if (!(result = p_analyze_directory(next_directory, actions, directory_ignore_list)))
 					break;
 			}
 		closedir(stream);
 	} else
 		result = p_analyze_directory_file(directory, actions);
-	for (index = 0; actions[index].extension; ++index) {
-		if (actions[index].load)
-			if (!(load_result = actions[index].load()))
-				d_log(e_log_level_low, "unable to run '.%s' LOAD function which returns code %d", actions[index].extension, load_result);
+	return result;
+}
+
+int f_analyze_directory(const char *directory, struct s_analyzer_action *actions, const char *directory_ignore_list) {
+	struct s_mysql_local_parameters db_parameters = {
+		NULL, /* socket connection */
+		"root",
+		"digitare",
+		"dampefm"
+	};
+	int index, load_result, result = d_false;
+	if ((result = p_analyze_directory(directory, actions, directory_ignore_list))) {
+		if (f_mysql_local_init(&db_parameters)) {
+			for (index = 0; actions[index].extension; ++index)
+				if (actions[index].load)
+					if (!(load_result = actions[index].load()))
+						d_log(e_log_level_low, "unable to run '.%s' LOAD function which returns code %d", actions[index].extension,
+								load_result);
+			f_mysql_local_destroy();
+		} else
+			d_err(e_log_level_ever, "mysql deamon '%s' is unreachable", db_parameters.server);
+	}
+	for (index = 0; actions[index].extension; ++index)
 		if (actions[index].destroy)
 			actions[index].destroy();
-	}
 	return result;
 }

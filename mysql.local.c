@@ -21,7 +21,7 @@ int f_mysql_local_init(struct s_mysql_local_parameters *parameters) {
 	int result = d_false;
 	if (!v_mysql_link) {
 		v_mysql_link = mysql_init(NULL);
-		if (mysql_real_connection(v_mysql_link, parameters->server, parameters->username, parameters->password, parameters->database, 0, NULL, 0))
+		if (mysql_real_connect(v_mysql_link, parameters->server, parameters->username, parameters->password, parameters->database, 0, NULL, 0))
 			result = d_true;
 	}
 	return result;
