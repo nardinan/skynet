@@ -22,6 +22,7 @@ struct s_analyzer_action actions[] = {
 	{NULL}
 };
 int main (int argc, char *argv[]) {
+	v_log_level = e_log_level_low;
 	if (argc == 2) {
 		f_memory_init();
 		f_analyze_directory(argv[1], actions, "H000T H000B");
