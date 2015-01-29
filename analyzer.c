@@ -20,7 +20,6 @@ int f_analyze_exclude(const char *file) {
 	char buffer[PATH_MAX];
 	FILE *stream;
 	int result = d_true;
-	return result; /* FIXME: after the test you have to remove this line */
 	if ((stream = fopen(d_analyzer_database, "r"))) {
 		while (!feof(stream))
 			if ((fgets(buffer, PATH_MAX, stream))) {
