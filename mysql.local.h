@@ -20,12 +20,30 @@
 #include <miranda/ground.h>
 #include <mysql.h>
 #define d_mysql_local_query_size 5120
+#define d_mysql_local_keyword_size 64
+#define d_mysql_local_entry_size 512
+#define d_mysql_local_date_format "%Y-%m-%d %T"
+#define d_mysql_local_string_invalid '"'
+#define d_mysql_local_string_invalid_replace_character '?'
 typedef int (* t_mysql_local_recall)(MYSQL_ROW entries, size_t elements);
+enum e_mysql_local_formats {
+	e_mysql_local_format_int,
+	e_mysql_local_format_float,
+	e_mysql_local_format_string,
+	e_mysql_local_format_char
+} e_mysql_local_formats;
 typedef struct s_mysql_local_parameters {
 	char *server, *username, *password, *database;
 } s_mysql_local_parameters;
+typedef struct s_mysql_local_variable {
+	const char *link;
+	void *variable;
+	enum e_mysql_local_formats format;
+} s_mysql_local_variable;
 extern MYSQL *v_mysql_link;
 extern int f_mysql_local_init(struct s_mysql_local_parameters *parameters);
-extern int f_mysql_local_run(char *query, t_mysql_local_recall action);
+extern int p_mysql_local_run_sanitize(char *query, struct s_mysql_local_variable *environment);
+extern int f_mysql_local_run(char *query, struct s_mysql_local_variable *environment, t_mysql_local_recall action);
+extern int f_mysql_local_run_file(const char *file, struct s_mysql_local_variable *environment, t_mysql_local_recall action);
 extern void f_mysql_local_destroy(void);
 #endif
