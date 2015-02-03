@@ -68,7 +68,7 @@ int p_analyze_directory(const char *directory, struct s_analyzer_action *actions
 	int result = d_true;
 	if ((stream = opendir(directory))) {
 		while ((descriptor = readdir(stream)))
-			if ((descriptor->d_name[0] != '.') && (!(strstr(descriptor->d_name, directory_ignore_list)))) {
+			if ((descriptor->d_name[0] != '.') && (!(strstr(directory_ignore_list, descriptor->d_name)))) {
 				snprintf(next_directory, PATH_MAX, "%s/%s", directory, descriptor->d_name);
 				if (!(result = p_analyze_directory(next_directory, actions, directory_ignore_list)))
 					break;
