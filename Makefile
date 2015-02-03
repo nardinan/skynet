@@ -4,8 +4,10 @@ cflags = -Wall -I.. `mysql_config --cflags` -Wno-variadic-macros -Wno-missing-br
 lflags = -Wall
 liblink = -L../miranda -L/usr/lib -lpthread -lmiranda_ground `mysql_config --libs`
 exec = skynet.bin
+blacklist= skynet.blacklist.txt
 
 all: $(objects)
+	rm -f $(blacklist)
 	$(cc) $(lflags) $(objects) -o $(exec) $(liblink)
 
 skynet.o: skynet.c analyzer.h cal_module.h
