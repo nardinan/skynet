@@ -22,7 +22,7 @@
 #include "mysql.local.h"
 #define d_cal_module_ladder_channels 384
 #define d_cal_module_ladder_serials 2
-#define d_cal_module_serial_size 20
+#define d_cal_module_serial_size 18
 #define d_cal_module_date_size 45
 #define d_cal_module_location_size 20
 #define d_cal_module_device_type_size 3
@@ -32,9 +32,6 @@
 #define d_cal_module_device_test_default_kind '*'
 #define d_cal_module_pdf_extension "pdf"
 #define d_cal_module_date_format "%d %b %Y %H:%M:%S"
-#define d_cal_module_query_device_insert 			"queries/device_insert.sql"
-#define d_cal_module_query_device_test_insert 			"queries/device_test_insert.sql"
-#define d_cal_module_query_device_measurement_insert 		"queries/device_measurement_insert.sql"
 typedef enum e_cal_module_formats {
 	e_cal_module_format_int,
 	e_cal_module_format_float

@@ -66,8 +66,8 @@ int f_cal_module_analyze(const char *file) {
 		{e_string_key_kind_string, 	"name",			{(void *)entry.name},			d_string_buffer_size},
 		{e_string_key_kind_string, 	"starting_time",	{(void *)entry.date},			d_cal_module_date_size},
 		{e_string_key_kind_string, 	"location",		{(void *)entry.location},		d_cal_module_location_size},
-		{e_string_key_kind_string,	"temp_SN",		{(void *)(entry.serials[0])},		d_cal_module_serial_size},
-		{e_string_key_kind_string,	"temp_SN",		{(void *)(entry.serials[1])},		d_cal_module_serial_size},
+		{e_string_key_kind_string,	"temp_SN",		{(void *)(entry.serials[0])},		d_cal_module_serial_size, 	d_true},
+		{e_string_key_kind_string,	"temp_SN",		{(void *)(entry.serials[1])},		d_cal_module_serial_size, 	d_true},
 		{e_string_key_kind_float,	"bias_volt",		{(void *)&(entry.bias_voltage)}},
 		{e_string_key_kind_float,	"leak_curr",		{(void *)&(entry.leakage_current)}},
 		{e_string_key_kind_float,	"temp_left",		{(void *)&(entry.temperatures[0])}},
@@ -131,7 +131,7 @@ int f_cal_module_load (void) {
 	struct s_cal_module_data *current;
 	char location_code, device_kind, device_type[d_cal_module_device_type_size] = {0}, buffer_device_code[d_cal_module_device_code_size] = {0},
 	     connector_side, test_date[d_string_buffer_size], test_kind;
-	int index, device_code, channel, result = d_true;
+	int index, device_code, channel, serial, result = d_true;
 	struct s_mysql_local_variable environment[] = {
 		{"device_location_code",	&location_code,		e_mysql_local_format_char},
 		{"device_kind",			&device_kind, 		e_mysql_local_format_char},
@@ -153,9 +153,10 @@ int f_cal_module_load (void) {
 		{"test_sigma_raw",		NULL,			e_mysql_local_format_float},	/* 17 */
 		{"test_sigma",			NULL,			e_mysql_local_format_float},	/* 18 */
 		{"test_bad_channel",		NULL,			e_mysql_local_format_int},	/* 19 */
+		{"test_serial",			NULL,			e_mysql_local_format_string}, 	/* 20 */
 		{NULL}
 	};
-	if ((v_cal_module_entries) && (current = (struct s_cal_module_data *)(v_cal_module_entries->head)))
+	if ((v_cal_module_entries) && (current = (struct s_cal_module_data *)(v_cal_module_entries->head))) {
 		while (current) {
 			environment[5].variable = &(current->location_code);
 			environment[7].variable = &(current->location_room);
@@ -188,17 +189,26 @@ int f_cal_module_load (void) {
 			connector_side = current->name[index++];
 			if ((test_kind = current->test_kind) == 0x00)
 				test_kind = d_cal_module_device_test_default_kind;
-			f_mysql_local_run_file(d_cal_module_query_device_insert, environment, NULL);
-			f_mysql_local_run_file(d_cal_module_query_device_test_insert, environment, NULL);
+			f_mysql_local_run_file("queries/TFH_insert.sql", environment, NULL);
+			f_mysql_local_run_file("queries/device_insert.sql", environment, NULL);
+			f_mysql_local_run_file("queries/device_test_insert.sql", environment, NULL);
 			for (channel = 0; channel < d_cal_module_ladder_channels; ++channel) {
 				environment[16].variable = &(current->rows[channel].pedestal);
 				environment[17].variable = &(current->rows[channel].sigma_raw);
 				environment[18].variable = &(current->rows[channel].sigma);
 				environment[19].variable = &(current->rows[channel].bad_channel);
-				f_mysql_local_run_file(d_cal_module_query_device_measurement_insert, environment, NULL);
+				f_mysql_local_run_file("queries/device_measurement_insert.sql", environment, NULL);
 			}
+			for (serial = 0; serial < d_cal_module_ladder_serials; ++serial)
+				if (f_string_strlen(current->serials[serial]) > 0) {
+					environment[20].variable = current->serials[serial];
+					f_mysql_local_run_file("queries/serial_insert.sql", environment, NULL);
+					f_mysql_local_run_file("queries/TFH_device_insert.sql", environment, NULL);
+				}
+			f_mysql_local_run_file("queries/TFH_position_insert.sql", environment, NULL);
 			current = (struct s_cal_module_data *)(current->head.next);
 		}
+	}
 	return result;
 }
 
