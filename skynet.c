@@ -25,7 +25,7 @@ int main (int argc, char *argv[]) {
 	v_log_level = e_log_level_ever;
 	if (argc == 2) {
 		f_memory_init();
-		f_analyze_directory(argv[1], actions, "H000T H000B");
+		f_analyze_directory(argv[1], actions, "H000T H000B HF000B HF000T");
 		f_memory_destroy();
 	}
 	return 0;
