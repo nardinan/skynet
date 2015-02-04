@@ -156,7 +156,10 @@ int f_cal_module_load (void) {
 		{"test_serial",			NULL,			e_mysql_local_format_string}, 	/* 20 */
 		{NULL}
 	};
+	struct s_list *queries_insertion = NULL, *queries_association = NULL;
 	if ((v_cal_module_entries) && (current = (struct s_cal_module_data *)(v_cal_module_entries->head))) {
+		f_list_init(&queries_insertion);
+		f_list_init(&queries_association);
 		while (current) {
 			environment[5].variable = &(current->location_code);
 			environment[7].variable = &(current->location_room);
@@ -189,25 +192,31 @@ int f_cal_module_load (void) {
 			connector_side = current->name[index++];
 			if ((test_kind = current->test_kind) == 0x00)
 				test_kind = d_cal_module_device_test_default_kind;
-			f_mysql_local_run_file("queries/TFH_insert.sql", environment, NULL);
-			f_mysql_local_run_file("queries/device_insert.sql", environment, NULL);
-			f_mysql_local_run_file("queries/device_test_insert.sql", environment, NULL);
+			f_mysql_local_append_file("queries/TFH_insert.sql", environment, queries_insertion);
+			f_mysql_local_append_file("queries/device_insert.sql", environment, queries_insertion);
+			f_mysql_local_append_file("queries/device_test_insert.sql", environment, queries_insertion);
 			for (channel = 0; channel < d_cal_module_ladder_channels; ++channel) {
 				environment[16].variable = &(current->rows[channel].pedestal);
 				environment[17].variable = &(current->rows[channel].sigma_raw);
 				environment[18].variable = &(current->rows[channel].sigma);
 				environment[19].variable = &(current->rows[channel].bad_channel);
-				f_mysql_local_run_file("queries/device_measurement_insert.sql", environment, NULL);
+				f_mysql_local_append_file("queries/device_measurement_insert.sql", environment, queries_insertion);
 			}
 			for (serial = 0; serial < d_cal_module_ladder_serials; ++serial)
 				if (f_string_strlen(current->serials[serial]) > 0) {
 					environment[20].variable = current->serials[serial];
-					f_mysql_local_run_file("queries/serial_insert.sql", environment, NULL);
-					f_mysql_local_run_file("queries/TFH_device_insert.sql", environment, NULL);
+					f_mysql_local_append_file("queries/serial_insert.sql", environment, queries_insertion);
+					f_mysql_local_append_file("queries/TFH_device_insert.sql", environment, queries_association);
 				}
-			f_mysql_local_run_file("queries/TFH_position_insert.sql", environment, NULL);
+			f_mysql_local_append_file("queries/TFH_position_insert.sql", environment, queries_insertion);
 			current = (struct s_cal_module_data *)(current->head.next);
 		}
+		f_mysql_local_run(queries_insertion, NULL);
+		f_mysql_local_run(queries_association, NULL);
+		f_mysql_local_destroy_list(queries_insertion);
+		f_mysql_local_destroy_list(queries_association);
+		f_list_destroy(&queries_insertion);
+		f_list_destroy(&queries_association);
 	}
 	return result;
 }

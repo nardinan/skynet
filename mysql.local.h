@@ -19,12 +19,16 @@
 #define skynet_mysql_local_h
 #include <miranda/ground.h>
 #include <mysql.h>
-#define d_mysql_local_query_size 5120
+#define d_mysql_local_query_size 64
 #define d_mysql_local_keyword_size 64
 #define d_mysql_local_entry_size 512
 #define d_mysql_local_date_format "%Y-%m-%d %T"
 #define d_mysql_local_string_invalid '"'
 #define d_mysql_local_string_invalid_replace_character '?'
+#define d_mysql_local_replace_INT	" %d "
+#define d_mysql_local_replace_FLOAT	" %.02f "
+#define d_mysql_local_replace_CHAR	" \"%c\" "
+#define d_mysql_local_replace_STRING	" \"%s\" "
 typedef int (* t_mysql_local_recall)(MYSQL_ROW entries, size_t elements);
 enum e_mysql_local_formats {
 	e_mysql_local_format_int,
@@ -40,10 +44,16 @@ typedef struct s_mysql_local_variable {
 	void *variable;
 	enum e_mysql_local_formats format;
 } s_mysql_local_variable;
+typedef struct s_mysql_query { d_list_node_head;
+	char *query;
+} s_mysql_query;
 extern MYSQL *v_mysql_link;
 extern int f_mysql_local_init(struct s_mysql_local_parameters *parameters);
-extern int p_mysql_local_run_sanitize(char *query, struct s_mysql_local_variable *environment);
-extern int f_mysql_local_run(char *query, struct s_mysql_local_variable *environment, t_mysql_local_recall action);
-extern int f_mysql_local_run_file(const char *file, struct s_mysql_local_variable *environment, t_mysql_local_recall action);
+extern char *f_mysql_local_sanitize(char *raw_query, char *sanitized_query, size_t *computed_size, size_t size, struct s_mysql_local_variable *environment);
+extern int f_mysql_local_append(char *query, struct s_mysql_local_variable *environment, struct s_list *queries);
+extern int f_mysql_local_append_file(const char *file, struct s_mysql_local_variable *environment, struct s_list *queries);
+extern int p_mysql_local_run_single(char *query, t_mysql_local_recall action);
+extern int f_mysql_local_run(struct s_list *queries, t_mysql_local_recall action);
+extern void f_mysql_local_destroy_list(struct s_list *queries);
 extern void f_mysql_local_destroy(void);
 #endif

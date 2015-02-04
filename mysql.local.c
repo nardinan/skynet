@@ -27,71 +27,94 @@ int f_mysql_local_init(struct s_mysql_local_parameters *parameters) {
 	return result;
 }
 
-int p_mysql_local_run_sanitize(char *query, struct s_mysql_local_variable *environment) {
-	char *pointer = query, *next, *final, *invalid_character, keyword[d_mysql_local_keyword_size], entry[d_mysql_local_entry_size],
-	     sanitized_query[d_mysql_local_query_size] = {0};
+char *f_mysql_local_sanitize(char *raw_query, char *sanitized_query, size_t *computed_size, size_t size, struct s_mysql_local_variable *environment) {
+	char *pointer = raw_query, *next, *last, *invalid_character, keyword[d_mysql_local_keyword_size], entry[d_mysql_local_entry_size] = {0};
+	size_t dimension, remaining = size-1, lower;
 	int index;
+	*computed_size = 0;
+	memset(sanitized_query, 0, size);
 	while ((next = strchr(pointer, '#'))) {
-		final = (next+1);
-		while ((isalnum(*final)) || (*final == '_'))
-			final++;
+		last = (next+1);
+		while ((isalnum(*last)) || (strchr("_.-", *last)))
+			last++;
 		memset(keyword, 0, d_mysql_local_keyword_size);
-		strncpy(keyword, (next+1), (final-next)-1);
-		if (next > pointer)
-			strncat(sanitized_query, pointer, (next-pointer)-1);
+		if ((dimension = (last-next)-1) > 0)
+			strncpy(keyword, (next+1), (dimension>d_mysql_local_keyword_size)?d_mysql_local_keyword_size:dimension);
+		if ((dimension = (next-pointer)) > 0) {
+			*computed_size += dimension;
+			if ((lower = (dimension>remaining)?remaining:dimension)) {
+				remaining -= lower;
+				strncat(sanitized_query, pointer, lower);
+			}
+		}
 		if ((f_string_strlen(keyword) > 0) && (environment)) {
 			for (index = 0; environment[index].link; ++index)
 				if (f_string_strcmp(environment[index].link, keyword) == 0) {
 					switch (environment[index].format) {
 						case e_mysql_local_format_int:
-							snprintf(entry, d_mysql_local_entry_size, " %d ", *((int *)environment[index].variable));
+							snprintf(entry, d_mysql_local_entry_size, d_mysql_local_replace_INT,
+									*((int *)environment[index].variable));
 							break;
 						case e_mysql_local_format_float:
-							snprintf(entry, d_mysql_local_entry_size, " %.02f ", *((float *)environment[index].variable));
+							snprintf(entry, d_mysql_local_entry_size, d_mysql_local_replace_FLOAT,
+									*((float *)environment[index].variable));
 							break;
 						case e_mysql_local_format_char:
 							if (*((char *)environment[index].variable) == d_mysql_local_string_invalid)
 								*((char *)environment[index].variable) = d_mysql_local_string_invalid_replace_character;
-							snprintf(entry, d_mysql_local_entry_size, " \"%c\" ", *((char *)environment[index].variable));
+							snprintf(entry, d_mysql_local_entry_size, d_mysql_local_replace_CHAR,
+									*((char *)environment[index].variable));
 							break;
 						case e_mysql_local_format_string:
 							while ((invalid_character = strchr((char *)environment[index].variable, d_mysql_local_string_invalid)))
-							       *invalid_character = d_mysql_local_string_invalid_replace_character;
-							snprintf(entry, d_mysql_local_entry_size, " \"%s\" ", (char *)environment[index].variable);
+								*invalid_character = d_mysql_local_string_invalid_replace_character;
+							snprintf(entry, d_mysql_local_entry_size, d_mysql_local_replace_STRING,
+									(char *)environment[index].variable);
 							break;
 					}
-					strncat(sanitized_query, entry, (d_mysql_local_query_size-f_string_strlen(sanitized_query)));
+					if ((dimension = f_string_strlen(entry)) > 0) {
+						*computed_size += dimension;
+						if ((lower = (dimension>remaining)?remaining:dimension)) {
+							remaining -= lower;
+							strncat(sanitized_query, entry, lower);
+						}
+					}
 					break;
 				}
 			if (!environment[index].link)
-				d_log(e_log_level_high, "warning, keyword #%s was not defined in the current context", keyword);
+				d_log(e_log_level_high, "warning, on query:\n\n%s\n\nkeyword #%s was not defined in the current context", raw_query, keyword);
 		}
-		pointer = final;
+		pointer = last;
 	}
-	if (f_string_strlen(pointer))
-		strcat(sanitized_query, pointer);
-	return mysql_query(v_mysql_link, sanitized_query);
+	if ((dimension = f_string_strlen(pointer)) > 0) {
+		*computed_size += dimension;
+		if ((lower = (dimension>remaining)?remaining:dimension)) {
+			remaining -= lower;
+			strncat(sanitized_query, pointer, lower);
+		}
+	}
+	return sanitized_query;
 }
 
-int f_mysql_local_run(char *query, struct s_mysql_local_variable *environment, t_mysql_local_recall action) {
-	MYSQL_RES *output;
-	MYSQL_ROW output_row;
-	int fields, result = d_false;
-	if (v_mysql_link)
-		if (p_mysql_local_run_sanitize(query, environment) == 0) {
-			if ((action) && (output = mysql_store_result(v_mysql_link))) {
-				fields = mysql_num_fields(output);
-				while ((output_row = mysql_fetch_row(output)))
-					if (!action(output_row, fields))
-						break;
-				mysql_free_result(output);
-			}
+int f_mysql_local_append(char *query, struct s_mysql_local_variable *environment, struct s_list *queries) {
+	struct s_mysql_query *node;
+	char buffer[d_mysql_local_query_size];
+	size_t current_length = d_mysql_local_query_size, length;
+	int result = d_false;
+	if ((node = (struct s_mysql_query *) d_malloc(sizeof(struct s_mysql_query)))) {
+		f_mysql_local_sanitize(query, buffer, &length, current_length, environment);
+		if ((length > 0) && (node->query = (char *)d_malloc(length))) {
+			current_length = length;
+			f_mysql_local_sanitize(query, node->query, &length, current_length, environment);
+			f_list_append(queries, (struct s_list_node *)node, e_list_insert_head);
 			result = d_true;
-		}
+		} else
+			d_free(node);
+	}
 	return result;
 }
 
-int f_mysql_local_run_file(const char *file, struct s_mysql_local_variable *environment, t_mysql_local_recall action) {
+int f_mysql_local_append_file(const char *file, struct s_mysql_local_variable *environment, struct s_list *queries) {
 	FILE *stream;
 	char *query;
 	size_t size, real_dimension;
@@ -101,10 +124,8 @@ int f_mysql_local_run_file(const char *file, struct s_mysql_local_variable *envi
 		if ((size = ftell(stream)) > 0) {
 			fseek(stream, 0, SEEK_SET);
 			if ((query = (char *) d_malloc(size+1))) {
-				if ((real_dimension = fread(query, 1, size, stream)) == size) {
-					query[size] = '\0';
-					result = f_mysql_local_run(query, environment, action);
-				}
+				if ((real_dimension = fread(query, 1, size, stream)) == size)
+					result = f_mysql_local_append(query, environment, queries);
 				d_free(query);
 			}
 		}
@@ -112,6 +133,46 @@ int f_mysql_local_run_file(const char *file, struct s_mysql_local_variable *envi
 	} else
 		d_log(e_log_level_high, "warning, query file %s not found", file);
 	return result;
+}
+
+int p_mysql_local_run_single(char *query, t_mysql_local_recall action) {
+	MYSQL_RES *output;
+	MYSQL_ROW output_row;
+	int fields, result = d_false;
+	if (v_mysql_link) {
+		if (mysql_query(v_mysql_link, query) == 0) {
+			if ((action) && (output = mysql_store_result(v_mysql_link))) {
+				fields = mysql_num_fields(output);
+				while ((output_row = mysql_fetch_row(output)))
+					if (!action(output_row, fields))
+						break;
+				mysql_free_result(output);
+			}
+			result = d_true;
+		} else
+			d_log(e_log_level_high, "warning, query:\n%s\n\nreturns: %s", query, mysql_error(v_mysql_link));
+	}
+	return result;
+}
+
+int f_mysql_local_run(struct s_list *queries, t_mysql_local_recall action) {
+	struct s_mysql_query *node = (struct s_mysql_query *)(queries->head);
+	int result = 0;
+	while (node) {
+		if (p_mysql_local_run_single(node->query, action))
+			result++;
+		node = (struct s_mysql_query *)(node->head.next);
+	}
+	return result;
+}
+
+void f_mysql_local_destroy_list(struct s_list *queries) {
+	struct s_mysql_query *node;
+       	while ((node = (struct s_mysql_query *)queries->head)) {
+		f_list_delete(queries, (struct s_list_node *)node);
+		d_free(node->query);
+		d_free(node);
+	}
 }
 
 void f_mysql_local_destroy(void) {
