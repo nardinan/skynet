@@ -127,7 +127,7 @@ int f_cal_module_analyze(const char *file) {
 	return result;
 }
 
-int f_cal_module_load (void) {
+int f_cal_module_load(void) {
 	struct s_cal_module_data *current;
 	char location_code, device_kind, device_type[d_cal_module_device_type_size] = {0}, buffer_device_code[d_cal_module_device_code_size] = {0},
 	     connector_side, test_date[d_string_buffer_size], test_kind;
@@ -221,7 +221,7 @@ int f_cal_module_load (void) {
 	return result;
 }
 
-void f_cal_module_destroy (void) {
+void f_cal_module_destroy(void) {
 	struct s_cal_module_data *current;
 	if (v_cal_module_entries) {
 		while (v_cal_module_entries->head)
