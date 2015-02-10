@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "analyzer.h"
-#include "cal_module.h"
+#include "cal.module.h"
 struct s_analyzer_action actions[] = {
 	{".cal", &f_cal_module_analyze, &f_cal_module_load, &f_cal_module_destroy},
 	{NULL}
