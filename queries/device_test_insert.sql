@@ -1,10 +1,6 @@
 INSERT INTO t_device_test(device_fk, location_fk, date, room, temperature_1, temperature_2, voltage, current, cal_file, pdf_file, kind) 
 	SELECT * FROM (SELECT 
-		(SELECT device_pk FROM t_device WHERE 
-			(location_fk = (SELECT location_pk FROM t_location WHERE code = #device_location_code)) AND
-			(kind = #device_kind) AND 
-			(code = #device_code) AND 
-			(type = #device_type)) AS tmp_device_fk, 
+		(SELECT device_pk FROM t_device WHERE (kind = #device_kind) AND (code = #device_code) AND (type = #device_type) AND (connector = #device_connector)) AS tmp_device_fk, 
 		(SELECT location_pk FROM t_location WHERE (code = #test_location_code)) AS tmp_location_fk, 
 		#test_date AS tmp_date, 
 		#test_room_code AS tmp_room,
