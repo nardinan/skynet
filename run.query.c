@@ -19,7 +19,7 @@
 #define d_divisor ';'
 int f_print_result(MYSQL_ROW entries, size_t elements) {
 	int index;
-	for (index = 0; index < elements; ++elements)
+	for (index = 0; index < elements; ++index)
 		printf("%s%c", (entries[index])?entries[index]:"[null]", (index==(elements-1))?'\n':d_divisor);
 	return d_true;
 }
@@ -31,7 +31,7 @@ void f_execute(char *file) {
 	if ((stream = fopen(file, "r"))) {
 		fseek(stream, 0, SEEK_END);
 		if ((size = ftell(stream)) > 0) {
-			fseek(stream, 0, SEEK_END);
+			fseek(stream, 0, SEEK_SET);
 			if ((query = (char *) d_malloc(size+1))) {
 				if ((real_dimension = fread(query, 1, size, stream)) == size)
 					p_mysql_local_run_single(query, f_print_result);
