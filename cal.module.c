@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "cal_module.h"
+#include "cal.module.h"
 struct s_list *v_cal_module_entries = NULL;
 int p_cal_module_analyze_add(struct s_cal_module_data *entry) {
 	struct s_cal_module_data *list_entry;
