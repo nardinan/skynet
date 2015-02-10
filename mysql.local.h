@@ -29,6 +29,7 @@
 #define d_mysql_local_replace_FLOAT	" %.02f "
 #define d_mysql_local_replace_CHAR	" \"%c\" "
 #define d_mysql_local_replace_STRING	" \"%s\" "
+#define d_mysql_local_stream_null -1
 typedef int (* t_mysql_local_recall)(MYSQL_ROW entries, size_t elements);
 enum e_mysql_local_formats {
 	e_mysql_local_format_int,
@@ -53,7 +54,7 @@ extern char *f_mysql_local_sanitize(char *raw_query, char *sanitized_query, size
 extern int f_mysql_local_append(char *query, struct s_mysql_local_variable *environment, struct s_list *queries);
 extern int f_mysql_local_append_file(const char *file, struct s_mysql_local_variable *environment, struct s_list *queries);
 extern int p_mysql_local_run_single(char *query, t_mysql_local_recall action);
-extern int f_mysql_local_run(struct s_list *queries, t_mysql_local_recall action);
+extern int f_mysql_local_run(struct s_list *queries, t_mysql_local_recall action, int stream);
 extern void f_mysql_local_destroy_list(struct s_list *queries);
 extern void f_mysql_local_destroy(void);
 #endif

@@ -211,8 +211,8 @@ int f_cal_module_load(void) {
 			f_mysql_local_append_file("queries/TFH_position_insert.sql", environment, queries_insertion);
 			current = (struct s_cal_module_data *)(current->head.next);
 		}
-		f_mysql_local_run(queries_insertion, NULL);
-		f_mysql_local_run(queries_association, NULL);
+		f_mysql_local_run(queries_insertion, NULL, STDOUT_FILENO);
+		f_mysql_local_run(queries_association, NULL, STDOUT_FILENO);
 		f_mysql_local_destroy_list(queries_insertion);
 		f_mysql_local_destroy_list(queries_association);
 		f_list_destroy(&queries_insertion);

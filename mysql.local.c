@@ -155,13 +155,27 @@ int p_mysql_local_run_single(char *query, t_mysql_local_recall action) {
 	return result;
 }
 
-int f_mysql_local_run(struct s_list *queries, t_mysql_local_recall action) {
+int f_mysql_local_run(struct s_list *queries, t_mysql_local_recall action, int output) {
 	struct s_mysql_query *node = (struct s_mysql_query *)(queries->head);
+	size_t executed = 0, failed = 0;
+	char buffer[d_string_buffer_size];
 	int result = 0;
 	while (node) {
 		if (p_mysql_local_run_single(node->query, action))
-			result++;
+			executed++;
+		else
+			failed++;
+		if (output != d_mysql_local_stream_null) {
+			snprintf(buffer, d_string_buffer_size, "\r[query %zu (+ %zu) of %zu - %.02f%%]", executed, failed, queries->fill,
+					((executed+failed)/(float)queries->fill));
+			write(output, buffer, f_string_strlen(buffer));
+			fsync(output);
+		}
 		node = (struct s_mysql_query *)(node->head.next);
+	}
+	if (output != d_mysql_local_stream_null) {
+		write(output, "\n", 1);
+		fsync(output);
 	}
 	return result;
 }
