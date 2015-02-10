@@ -1,15 +1,13 @@
 objects = skynet.o mysql.local.o analyzer.o cal.module.o
 objects_run_query = mysql.local.o run.query.o
 cc = gcc -g
-cflags = -Wall -I.. `mysql_config --cflags` -Wno-variadic-macros -Wno-missing-braces -Wno-gnu -Wno-pointer-sign -c -pedantic
+cflags = -Wall -I.. `mysql_config --cflags` -Wno-variadic-macros -Wno-missing-braces -Wno-pointer-sign -c
 lflags = -Wall
 liblink = -L../miranda -L/usr/lib -lpthread -lmiranda_ground `mysql_config --libs`
 exec = skynet.bin
-exec_blacklist = skynet.blacklist.txt
 exec_run_query = run.query.bin
 
 all: $(objects) $(objects_run_query)
-	rm -f $(exec_blacklist)
 	$(cc) $(lflags) $(objects) -o $(exec) $(liblink)
 	$(cc) $(lflags) $(objects_run_query) -o $(exec_run_query) $(liblink)
 
@@ -31,3 +29,4 @@ run.query.o: run.query.c mysql.local.h
 clean:
 	rm -f *.o
 	rm -f $(exec)
+	rm -f $(exec_run_query)
