@@ -106,7 +106,7 @@ int f_mysql_local_append(char *query, struct s_mysql_local_variable *environment
 		if ((length > 0) && (node->query = (char *)d_malloc(length))) {
 			current_length = length;
 			f_mysql_local_sanitize(query, node->query, &length, current_length, environment);
-			f_list_append(queries, (struct s_list_node *)node, e_list_insert_head);
+			f_list_append(queries, (struct s_list_node *)node, e_list_insert_tail);
 			result = d_true;
 		} else
 			d_free(node);
