@@ -167,7 +167,7 @@ int f_mysql_local_run(struct s_list *queries, t_mysql_local_recall action, int o
 			failed++;
 		if (output != d_mysql_local_stream_null) {
 			snprintf(buffer, d_string_buffer_size, "\33[2K\r[running MYSQL][query %zu (+ %zu) of %zu - %.02f%%]", executed, failed, queries->fill,
-					((executed+failed)/(float)queries->fill));
+					(((executed+failed)/(float)queries->fill)*100.0f));
 			write(output, buffer, f_string_strlen(buffer));
 			fsync(output);
 		}
