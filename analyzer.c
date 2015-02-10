@@ -61,14 +61,18 @@ int p_analyze_directory_file(const char *file, struct s_analyzer_action *actions
 	return result;
 }
 
-int p_analyze_directory(const char *directory, struct s_analyzer_action *actions, const char *directory_ignore_list) {
+int p_analyze_directory(char *directory, struct s_analyzer_action *actions, const char *directory_ignore_list) {
 	DIR *stream;
 	struct dirent *descriptor;
 	char next_directory[PATH_MAX];
 	int result = d_true;
+	size_t length;
 	if ((stream = opendir(directory))) {
 		while ((descriptor = readdir(stream)))
 			if ((descriptor->d_name[0] != '.') && (!(strstr(directory_ignore_list, descriptor->d_name)))) {
+				length = f_string_strlen(directory);
+				if (directory[length-1] == '/')
+					directory[length-1] = '\0';
 				snprintf(next_directory, PATH_MAX, "%s/%s", directory, descriptor->d_name);
 				if (!(result = p_analyze_directory(next_directory, actions, directory_ignore_list)))
 					break;
@@ -79,7 +83,7 @@ int p_analyze_directory(const char *directory, struct s_analyzer_action *actions
 	return result;
 }
 
-int f_analyze_directory(const char *directory, struct s_analyzer_action *actions, const char *directory_ignore_list) {
+int f_analyze_directory(char *directory, struct s_analyzer_action *actions, const char *directory_ignore_list) {
 	struct s_mysql_local_parameters db_parameters = {
 		NULL, /* socket connection */
 		"root",
