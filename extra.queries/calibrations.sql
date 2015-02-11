@@ -18,7 +18,7 @@ FROM t_device_measurement INNER JOIN
 		t_device.connector AS connector,
 		t_location.code AS location_code,
 		current_device_test.kind AS test_kind,
-		current_device_test.date,
+		current_device_test.date AS test_date,
 		current_device_test.device_fk,
 		current_device_test.device_test_pk AS device_test_pk
 	FROM t_device LEFT JOIN
