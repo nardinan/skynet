@@ -1,5 +1,4 @@
 SELECT
-	current_device.date,
 	t_device_measurement.channel,
 	t_device_measurement.pedestal,
 	t_device_measurement.sigma_raw,
