@@ -22,7 +22,12 @@ FROM t_device_measurement INNER JOIN
 		current_device_test.device_fk,
 		current_device_test.device_test_pk AS device_test_pk
 	FROM t_device LEFT JOIN
-		(SELECT kind, date, device_fk FROM t_device_test AS device_test WHERE
+		(SELECT 
+			device_test_pk,
+			kind, 
+			date, 
+			device_fk 
+		FROM t_device_test AS device_test WHERE
 			(date = (select MAX(date) FROM t_device_test WHERE 
 					(kind = device_test.kind) AND
 					(device_fk = device_test.device_fk)))) AS current_device_test
