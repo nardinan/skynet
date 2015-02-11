@@ -1,6 +1,6 @@
 INSERT INTO t_device_measurement(device_test_fk, channel, pedestal, sigma_raw, sigma, bad_channel) 
 	SELECT * FROM (SELECT 
-		(SELECT device_test_pk FROM t_device_test WHERE (cal_file = #test_cal_file)) AS tmp_device_test_fk, 
+		(SELECT device_test_pk FROM t_device_test WHERE cal_file = #test_cal_file) AS tmp_device_test_fk, 
 		#test_channel AS tmp_channel, 
 		#test_pedestal AS tmp_pedestal, 
 		#test_sigma_raw AS tmp_sigma_raw,
