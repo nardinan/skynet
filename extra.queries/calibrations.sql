@@ -11,7 +11,7 @@ SELECT
 	current_device.connector,
 	current_device.test_kind,
 	current_device.test_date
-FROM t_device_measurement LEFT JOIN
+FROM t_device_measurement INNER JOIN
 	(SELECT
 		t_device.kind AS device_kind,
 		t_device.code AS device_code,
@@ -20,7 +20,8 @@ FROM t_device_measurement LEFT JOIN
 		t_location.code AS location_code,
 		current_device_test.kind AS test_kind,
 		current_device_test.date,
-		current_device_test.device_fk AS device_fk
+		current_device_test.device_fk,
+		current_device_test.device_test_pk AS device_test_pk
 	FROM t_device LEFT JOIN
 		(SELECT kind, date, device_fk FROM t_device_test AS device_test WHERE
 			(date = (select MAX(date) FROM t_device_test WHERE 
@@ -28,4 +29,4 @@ FROM t_device_measurement LEFT JOIN
 					(device_fk = device_test.device_fk)))) AS current_device_test
 		ON (t_device.device_pk = current_device_test.device_fk) LEFT JOIN t_location 
 		ON (t_device.location_fk = t_location.location_pk)) AS current_device
-	ON (t_device_measurement.device_test_fk = current_device.device_fk);
+	ON (t_device_measurement.device_test_fk = current_device.device_test_pk);
