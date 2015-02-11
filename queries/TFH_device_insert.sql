@@ -6,7 +6,7 @@ INSERT INTO t_TFH_device(TFH_fk, device_fk)
 			(code = #device_code) AND 
 			(type = #device_type) AND 
 			(connector = #device_connector) AND
-			(loction_fk = (SELECT location_pk FROM t_location WHERE code = #device_location_code))) as tmp_device_fk) AS temporary WHERE 
+			(location_fk = (SELECT location_pk FROM t_location WHERE code = #device_location_code))) as tmp_device_fk) AS temporary WHERE 
 	EXISTS (SELECT serial FROM t_sensor WHERE serial = #test_serial) AND
 	NOT EXISTS (SELECT TFH_fk, device_fk FROM t_TFH_device WHERE 
 			(TFH_fk = tmp_TFH_fk) AND 
