@@ -4,7 +4,7 @@ INSERT INTO t_device_test(device_fk, location_fk, date, room, temperature_1, tem
 			(kind = #device_kind) AND 
 			(code = #device_code) AND 
 			(type = #device_type) AND 
-			(connector = #device_connector)
+			(connector = #device_connector) AND
 			(location_fk = (SELECT location_pk FROM t_location WHERE code = #device_location_code))) AS tmp_device_fk, 
 		(SELECT location_pk FROM t_location WHERE code = #test_location_code) AS tmp_location_fk, 
 		#test_date AS tmp_date, 
