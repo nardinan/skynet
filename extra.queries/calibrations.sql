@@ -3,6 +3,7 @@ SELECT
 	t_device_measurement.pedestal,
 	t_device_measurement.sigma_raw,
 	t_device_measurement.sigma,
+	t_device_measurement.bad_channel,
 	current_device.device_kind,
 	current_device.location_code,
 	current_device.device_type,
