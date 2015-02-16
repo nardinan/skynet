@@ -54,7 +54,7 @@ extern char *f_mysql_local_sanitize(char *raw_query, char *sanitized_query, size
 extern int f_mysql_local_append(char *query, struct s_mysql_local_variable *environment, struct s_list *queries);
 extern int f_mysql_local_append_file(const char *file, struct s_mysql_local_variable *environment, struct s_list *queries);
 extern int p_mysql_local_run_single(char *query, t_mysql_local_recall action);
-extern int f_mysql_local_run(struct s_list *queries, t_mysql_local_recall action, int stream);
+extern int f_mysql_local_run(struct s_list *queries, t_mysql_local_recall action, int output);
 extern void f_mysql_local_destroy_list(struct s_list *queries);
 extern void f_mysql_local_destroy(void);
 #endif
