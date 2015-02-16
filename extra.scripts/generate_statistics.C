@@ -1,13 +1,13 @@
 /*
  * the format to prepare the root file is:
- * "channel/I;pedestal/D;sigma_raw/D;sigma/D;device_type/C;device_location/C;device_kind/C;device_code/I;device_connector/C;test_kind/C;date/C"
+ * "channel/I;pedestal/D;sigma_raw/D;sigma/D;bad_channel/D;device_type/C;device_location/C;device_kind/C;device_code/I;device_connector/C;test_kind/C;date/C"
  */
 #define d_skynet_X 2000
 #define d_skynet_Y 800
 #define d_skynet_string_branch_size 3
 #define d_skynet_string_size 256
 typedef struct s_skynet_quality_data {
-	int channel, device_code;
+	int channel, device_code, bad_channel;
 	double pedestal, sigma_raw, sigma;
 	char device_type[d_skynet_string_branch_size], device_location[d_skynet_string_branch_size], test_kind[d_skynet_string_branch_size];
 } s_skynet_quality_data;
@@ -48,28 +48,29 @@ void f_skynet_draw_quality(const char *file) {
 	char name[d_skynet_string_size];
 	/* prepare canvas */
 	struct s_skynet_plot *plots[] = {
-		p_skynet_draw_quality_plot("ped_LLPG",	 	"Pedestal PG Ladder (test 'l')", 	 0, 500), 	/* 0 */
-		p_skynet_draw_quality_plot("ped_LLGV", 		"Pedestal GV Ladder (test 'l')", 	 0, 500), 	/* 1 */
-		p_skynet_draw_quality_plot("ped_LLPGGV", 	"Pedestal PG+GV Ladder (test 'l')", 	 0, 500), 	/* 2 */
-		p_skynet_draw_quality_plot("sraw_LLPG", 	"Sigma Raw PG Ladder (test 'l')", 	 0, 50), 	/* 3 */
-		p_skynet_draw_quality_plot("sraw_LLGV", 	"Sigma Raw  GV Ladder (test 'l')", 	 0, 50),	/* 4 */
-		p_skynet_draw_quality_plot("sraw_LLPGGV", 	"Sigma Raw PG+GV Ladder (test 'l')", 	 0, 50),	/* 5 */
-		p_skynet_draw_quality_plot("sig_LLPG", 		"Sigma PG Ladder (test 'l')", 		 0, 50),	/* 6 */
-		p_skynet_draw_quality_plot("sig_LLGV", 		"Sigma GV Ladder (test 'l')", 		 0, 50),	/* 7 */
-		p_skynet_draw_quality_plot("sig_LLPGGV", 	"Sigma PG+GV Ladder (test 'l')", 	 0, 50),	/* 8 */
-		p_skynet_draw_quality_plot("ped_LMPG",	 	"Pedestal PG Ladder (test 'm')", 	 0, 500), 	/* 9 */
-		p_skynet_draw_quality_plot("ped_LMGV", 		"Pedestal GV Ladder (test 'm')", 	 0, 500), 	/* 10 */
-		p_skynet_draw_quality_plot("ped_LMPGGV", 	"Pedestal PG+GV Ladder (test 'm')", 	 0, 500), 	/* 11 */
-		p_skynet_draw_quality_plot("sraw_LMPG", 	"Sigma Raw PG Ladder (test 'm')", 	 0, 50), 	/* 12 */
-		p_skynet_draw_quality_plot("sraw_LMGV", 	"Sigma Raw  GV Ladder (test 'm')", 	 0, 50),	/* 13 */
-		p_skynet_draw_quality_plot("sraw_LMPGGV", 	"Sigma Raw PG+GV Ladder (test 'm')", 	 0, 50),	/* 14 */
-		p_skynet_draw_quality_plot("sig_LMPG", 		"Sigma PG Ladder (test 'm')", 		 0, 50),	/* 15 */
-		p_skynet_draw_quality_plot("sig_LMGV", 		"Sigma GV Ladder (test 'm')", 		 0, 50),	/* 16 */
-		p_skynet_draw_quality_plot("sig_LMPGGV", 	"Sigma PG+GV Ladder (test 'm')", 	 0, 50),	/* 17 */
-		p_skynet_draw_quality_plot("ped_HB", 		"Pedestal Hybrid (test 'b')", 		 0, 500), 	/* 18 */
-		p_skynet_draw_quality_plot("ped_HB_4096",	"Pedestal Hybrid (test 'b')",		 0, 4096),	/* 19 */
-		p_skynet_draw_quality_plot("sraw_HB",		"Sigma Raw Hybrid (test 'b')",		 0, 50),	/* 20 */
-		p_skynet_draw_quality_plot("sig_HB",		"Sigma Hybrid (test 'b')",		 0, 50),	/* 21 */
+		p_skynet_draw_quality_plot("ped_LLPG",	 	"Pedestal PG Ladder (test 'l')",	0, 500), 	/* 0 */
+		p_skynet_draw_quality_plot("ped_LLGV", 		"Pedestal GV Ladder (test 'l')", 	0, 500), 	/* 1 */
+		p_skynet_draw_quality_plot("ped_LLPGGV", 	"Pedestal PG+GV Ladder (test 'l')", 	0, 500), 	/* 2 */
+		p_skynet_draw_quality_plot("sraw_LLPG", 	"Sigma Raw PG Ladder (test 'l')", 	0, 50), 	/* 3 */
+		p_skynet_draw_quality_plot("sraw_LLGV", 	"Sigma Raw  GV Ladder (test 'l')", 	0, 50),		/* 4 */
+		p_skynet_draw_quality_plot("sraw_LLPGGV", 	"Sigma Raw PG+GV Ladder (test 'l')",	0, 50),		/* 5 */
+		p_skynet_draw_quality_plot("sig_LLPG", 		"Sigma PG Ladder (test 'l')", 		0, 50),		/* 6 */
+		p_skynet_draw_quality_plot("sig_LLGV", 		"Sigma GV Ladder (test 'l')", 		0, 50),		/* 7 */
+		p_skynet_draw_quality_plot("sig_LLPGGV", 	"Sigma PG+GV Ladder (test 'l')", 	0, 50),		/* 8 */
+		p_skynet_draw_quality_plot("ped_LMPG",	 	"Pedestal PG Ladder (test 'm')", 	0, 500), 	/* 9 */
+		p_skynet_draw_quality_plot("ped_LMGV", 		"Pedestal GV Ladder (test 'm')", 	0, 500), 	/* 10 */
+		p_skynet_draw_quality_plot("ped_LMPGGV", 	"Pedestal PG+GV Ladder (test 'm')", 	0, 500), 	/* 11 */
+		p_skynet_draw_quality_plot("sraw_LMPG", 	"Sigma Raw PG Ladder (test 'm')", 	0, 50), 	/* 12 */
+		p_skynet_draw_quality_plot("sraw_LMGV", 	"Sigma Raw  GV Ladder (test 'm')", 	0, 50),		/* 13 */
+		p_skynet_draw_quality_plot("sraw_LMPGGV", 	"Sigma Raw PG+GV Ladder (test 'm')", 	0, 50),		/* 14 */
+		p_skynet_draw_quality_plot("sig_LMPG", 		"Sigma PG Ladder (test 'm')", 		0, 50),		/* 15 */
+		p_skynet_draw_quality_plot("sig_LMGV", 		"Sigma GV Ladder (test 'm')", 		0, 50),		/* 16 */
+		p_skynet_draw_quality_plot("sig_LMPGGV", 	"Sigma PG+GV Ladder (test 'm')", 	0, 50),		/* 17 */
+		p_skynet_draw_quality_plot("ped_HB", 		"Pedestal Hybrid (test 'b')", 		0, 500), 	/* 18 */
+		p_skynet_draw_quality_plot("ped_HB_4096",	"Pedestal Hybrid (test 'b')",		0, 4096),	/* 19 */
+		p_skynet_draw_quality_plot("sraw_HB",		"Sigma Raw Hybrid (test 'b')",		0, 50),		/* 20 */
+		p_skynet_draw_quality_plot("sig_HB",		"Sigma Hybrid (test 'b')",		0, 50),		/* 21 */
+		p_skynet_draw_quality_plot("sig_LMPG_good",	"Sigma PG Ladder (test 'm') no bad",	0, 50),		/* 22 */
 		NULL
 	};
 	int entries, index;
@@ -84,6 +85,7 @@ void f_skynet_draw_quality(const char *file) {
 				tree->SetBranchAddress("pedestal", &current_node.pedestal);
 				tree->SetBranchAddress("sigma_raw", &current_node.sigma_raw);
 				tree->SetBranchAddress("sigma", &current_node.sigma);
+				tree->SetBranchAddress("bad_channel", &current_node.bad_channel);
 				tree->SetBranchAddress("device_type", current_node.device_type);
 				tree->SetBranchAddress("device_location", current_node.device_location);
 				tree->SetBranchAddress("device_code", &current_node.device_code);
@@ -109,6 +111,8 @@ void f_skynet_draw_quality(const char *file) {
 								plots[9]->plot->Fill(current_node.pedestal);
 								plots[12]->plot->Fill(current_node.sigma_raw);
 								plots[15]->plot->Fill(current_node.sigma);
+								if (current_node.bad_channel == 0)
+									plots[22]->plot->Fill(current_node.sigma);
 							} else if (current_node.device_location[0] == 'G') {
 								plots[10]->plot->Fill(current_node.pedestal);
 								plots[13]->plot->Fill(current_node.sigma_raw);
