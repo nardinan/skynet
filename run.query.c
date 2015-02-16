@@ -40,7 +40,7 @@ void f_execute(char *file) {
 		}
 		fclose(stream);
 	} else
-		d_log(e_log_level_ever, "warning, query file %s not found", file);
+		d_err(e_log_level_ever, "warning, query file %s not found", file);
 }
 
 int main (int argc, char *argv[]) {
@@ -59,7 +59,7 @@ int main (int argc, char *argv[]) {
 				f_execute(argv[index]);
 			f_mysql_local_destroy();
 		} else
-			d_log(e_log_level_ever, "warning, unable to open the database %s", db_parameters.database);
+			d_err(e_log_level_ever, "warning, unable to open the database %s", db_parameters.database);
 		f_memory_destroy();
 	} else
 		d_err(e_log_level_ever, "%s <file>.sql", argv[0]);

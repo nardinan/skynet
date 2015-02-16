@@ -102,7 +102,7 @@ int f_cal_module_analyze(const char *file) {
 								entry.rows[current_index].sigma = sigma;
 								entry.rows[current_index].bad_channel = bad_channel;
 							} else
-								d_log(e_log_level_low, "warning, channel %d missing @ %s", current_index, file);
+								d_err(e_log_level_low, "warning, channel %d missing @ %s", current_index, file);
 							current_index++;
 						}
 			}
@@ -114,7 +114,7 @@ int f_cal_module_analyze(const char *file) {
 				for (current_index = f_string_strlen(entry.name); current_index > 1; --current_index)
 					entry.name[current_index] = entry.name[current_index-1];
 				entry.name[1] = 'F';
-				d_log(e_log_level_low, "{FIREFLY BUGXIF} name %s has been fixed", entry.name);
+				d_err(e_log_level_low, "{FIREFLY BUGXIF} name %s has been fixed", entry.name);
 			}
 			/* end */
 			while ((next = strstr(pointer, entry.name)))

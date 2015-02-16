@@ -96,7 +96,7 @@ int f_analyze_directory(char *directory, struct s_analyzer_action *actions, cons
 			for (index = 0; actions[index].extension; ++index)
 				if (actions[index].load)
 					if (!(load_result = actions[index].load()))
-						d_log(e_log_level_low, "unable to run '.%s' LOAD function which returns code %d", actions[index].extension,
+						d_err(e_log_level_low, "unable to run '.%s' LOAD function which returns code %d", actions[index].extension,
 								load_result);
 			f_mysql_local_destroy();
 		} else

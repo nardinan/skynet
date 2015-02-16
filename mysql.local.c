@@ -82,7 +82,7 @@ char *f_mysql_local_sanitize(char *raw_query, char *sanitized_query, size_t *com
 					break;
 				}
 			if (!environment[index].link)
-				d_log(e_log_level_high, "warning, on query:\n\n%s\n\nkeyword #%s was not defined in the current context", raw_query, keyword);
+				d_err(e_log_level_high, "warning, on query:\n\n%s\n\nkeyword #%s was not defined in the current context", raw_query, keyword);
 		}
 		pointer = last;
 	}
@@ -131,7 +131,7 @@ int f_mysql_local_append_file(const char *file, struct s_mysql_local_variable *e
 		}
 		fclose(stream);
 	} else
-		d_log(e_log_level_high, "warning, query file %s not found", file);
+		d_err(e_log_level_high, "warning, query file %s not found", file);
 	return result;
 }
 
@@ -150,7 +150,7 @@ int p_mysql_local_run_single(char *query, t_mysql_local_recall action) {
 			}
 			result = d_true;
 		} else
-			d_log(e_log_level_high, "warning, query:\n%s\n\nreturns: %s", query, mysql_error(v_mysql_link));
+			d_err(e_log_level_high, "warning, query:\n%s\n\nreturns: %s", query, mysql_error(v_mysql_link));
 	}
 	return result;
 }
