@@ -31,7 +31,7 @@ struct s_skynet_plot *p_skynet_draw_quality_plot(const char *name, const char *t
 	if ((result = (struct s_skynet_plot *) malloc(sizeof(struct s_skynet_plot)))) {
 		strncpy(result->name, name, d_skynet_string_size);
 		strncpy(result->title, title, d_skynet_string_size);
-		if ((result->plot = new TH1F(name, title, (high_x-low_x), low_x, high_x))) {
+		if ((result->plot = new TH1F(name, title, (high_x-low_x)*4, low_x, high_x))) {
 			result->plot->SetStats(kTRUE);
 			gStyle->SetOptStat("emro");
 			result->plot->SetLineColor(kRed);
@@ -70,7 +70,6 @@ void f_skynet_draw_quality(const char *file) {
 		p_skynet_draw_quality_plot("ped_HB_4096",	"Pedestal Hybrid (test 'b')",		0, 4096),	/* 19 */
 		p_skynet_draw_quality_plot("sraw_HB",		"Sigma Raw Hybrid (test 'b')",		0, 50),		/* 20 */
 		p_skynet_draw_quality_plot("sig_HB",		"Sigma Hybrid (test 'b')",		0, 50),		/* 21 */
-		p_skynet_draw_quality_plot("sig_LMPG_good",	"Sigma PG Ladder (test 'm') no bad",	0, 50),		/* 22 */
 		NULL
 	};
 	int entries, index;
@@ -111,8 +110,6 @@ void f_skynet_draw_quality(const char *file) {
 								plots[9]->plot->Fill(current_node.pedestal);
 								plots[12]->plot->Fill(current_node.sigma_raw);
 								plots[15]->plot->Fill(current_node.sigma);
-								if (current_node.bad_channel == 0)
-									plots[22]->plot->Fill(current_node.sigma);
 							} else if (current_node.device_location[0] == 'G') {
 								plots[10]->plot->Fill(current_node.pedestal);
 								plots[13]->plot->Fill(current_node.sigma_raw);
@@ -131,6 +128,7 @@ void f_skynet_draw_quality(const char *file) {
 				}
 				for (index = 0; plots[index]; ++index)
 					if ((plots[index]->canvas = p_skynet_draw_quality_canvas(plots[index]->name, plots[index]->title))) {
+						//plots[index]->canvas->SetLogy();
 						plots[index]->plot->Draw();
 						plots[index]->canvas->Update();
 						snprintf(name, d_skynet_string_size, "%s_%s.pdf", file, plots[index]->name);
