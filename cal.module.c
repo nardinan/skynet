@@ -35,7 +35,7 @@ int p_cal_module_analyze_row(char *buffer, struct s_cal_module_value *entries, s
 	int index, filled;
 	for (index = 0; index < size; ++index) {
 		filled = d_false;
-		if ((next = strchr(pointer, ','))) {
+		if ((next = strchr(pointer, ',')) || (next = strchr(pointer, '\0'))) {
 			*next = '\0';
 			f_string_trim(pointer);
 			if (f_string_strlen(pointer) > 0) {
