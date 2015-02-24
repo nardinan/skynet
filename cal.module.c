@@ -125,7 +125,7 @@ int f_cal_module_analyze(const char *file) {
 					entry.location_room = *(++pointer);
 					if (*(++pointer) == '_')
 						if (!isdigit(*(++pointer)))
-							entry.test_kind = *(pointer);
+							entry.test_kind = tolower(*(pointer));
 					if (strptime(entry.date, d_cal_module_date_format, &event_time))
 						entry.timestamp = mktime(&event_time);
 					p_cal_module_analyze_add(&entry);
