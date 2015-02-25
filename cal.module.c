@@ -164,10 +164,11 @@ int f_cal_module_load(void) {
 		{"test_serial",			NULL,			e_mysql_local_format_string}, 	/* 20 */
 		{NULL}
 	};
-	struct s_list *queries_insertion = NULL, *queries_association = NULL;
+	struct s_list *queries_insertion = NULL, *queries_association = NULL, *queries_location = NULL;
 	if ((v_cal_module_entries) && (current = (struct s_cal_module_data *)(v_cal_module_entries->head))) {
 		f_list_init(&queries_insertion);
 		f_list_init(&queries_association);
+		f_list_init(&queries_location);
 		while (current) {
 			environment[5].variable = &(current->location_code);
 			environment[7].variable = &(current->location_room);
@@ -216,15 +217,18 @@ int f_cal_module_load(void) {
 					f_mysql_local_append_file("queries/serial_insert.sql", environment, queries_insertion);
 					f_mysql_local_append_file("queries/TFH_device_insert.sql", environment, queries_association);
 				}
-			f_mysql_local_append_file("queries/TFH_position_insert.sql", environment, queries_insertion);
+			f_mysql_local_append_file("queries/TFH_position_insert.sql", environment, queries_location);
 			current = (struct s_cal_module_data *)(current->head.next);
 		}
 		f_mysql_local_run(queries_insertion, NULL, STDOUT_FILENO);
 		f_mysql_local_run(queries_association, NULL, STDOUT_FILENO);
+		f_mysql_local_run(queries_location, NULL, STDOUT_FILENO);
 		f_mysql_local_destroy_list(queries_insertion);
 		f_mysql_local_destroy_list(queries_association);
+		f_mysql_local_destroy_list(queries_location);
 		f_list_destroy(&queries_insertion);
 		f_list_destroy(&queries_association);
+		f_list_destroy(&queries_location);
 	}
 	return result;
 }
